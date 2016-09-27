@@ -130,7 +130,7 @@ class ViewController: UIViewController {
 extension ViewController : AVAudioRecorderDelegate{
     func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         print("audioRecorderDidFinishRecording : \(flag)")
-        print("exit : \(FileManager.default.fileExists(atPath: soundURL.absoluteString))")
+        print("exists : \(FileManager.default.fileExists(atPath: soundURL.absoluteString))")
     }
     
     func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
