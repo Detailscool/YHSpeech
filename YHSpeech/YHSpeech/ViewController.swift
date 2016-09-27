@@ -13,17 +13,20 @@ import Speech
 class ViewController: UIViewController {
     
     var recorder : AVAudioRecorder?
-
+    var soundURL : URL!
+    var session : AVAudioSession!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print("\(NSHomeDirectory())")
+
+        session = AVAudioSession.sharedInstance()
         
-        let session = AVAudioSession.sharedInstance()
         do {
-          try session.setCategory(AVAudioSessionCategoryPlayAndRecord, with: AVAudioSessionCategoryOptions.defaultToSpeaker)
-          try session.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
-          try session.setActive(true)
+            try session.setCategory(AVAudioSessionCategoryPlayAndRecord, with: AVAudioSessionCategoryOptions.defaultToSpeaker)
+            try session.overrideOutputAudioPort(AVAudioSessionPortOverride.speaker)
+            try session.setActive(true)
         }catch {
             print("catch : \(error)")
         }
@@ -41,26 +44,31 @@ class ViewController: UIViewController {
         settings[AVSampleRateKey] = NSNumber(value:8000)
         settings[AVNumberOfChannelsKey] = NSNumber(value:1)
         
-        var url = FileManager.default().urlsForDirectory(FileManager.SearchPathDirectory.cachesDirectory, inDomains: FileManager.SearchPathDomainMask.userDomainMask).last
-        do {
-            try url?.appendPathComponent("abc.aac")
+        let url = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last
+        if let _ = url {
+            soundURL = url!.appendingPathComponent("abc.aac")
             let audioFormat = AVAudioFormat(settings: settings)
-            try recorder = AVAudioRecorder(url: url!, format: audioFormat)
-        }catch {
-            print("catch : \(error)")
+            do {
+                recorder = try AVAudioRecorder(url: soundURL, format: audioFormat)
+            }catch {
+                print("\(error)")
+                return
+            }
+        }else {
+            return
         }
-        
         
         recorder?.prepareToRecord()
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
     }
-
+    
     @IBOutlet weak var resultLabel: UILabel!
     
     @IBAction func startRecording() {
+        print("\(soundURL.absoluteString)")
         recorder?.record()
     }
     
@@ -74,6 +82,7 @@ class ViewController: UIViewController {
     
     @IBAction func stopRecording() {
         recorder?.stop()
+        print("exit : \(FileManager.default.fileExists(atPath: soundURL.absoluteString))")
     }
     
     @IBAction func speechRecognized() {
@@ -97,25 +106,18 @@ class ViewController: UIViewController {
             return
         }
         
-        var url = FileManager.default().urlsForDirectory(FileManager.SearchPathDirectory.cachesDirectory, inDomains: FileManager.SearchPathDomainMask.userDomainMask).last
-        do {
-            try url?.appendPathComponent("abc.aac")
-            let recognizer = SFSpeechRecognizer(locale: Locale(localeIdentifier: "zh-CN"))
-            let request = SFSpeechURLRecognitionRequest(url: url!)
-            recognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
-                if let _ = error {
-                    print("\(error!)")
-                    return
-                }
-                
-                self.resultLabel.text = result?.bestTranscription.formattedString
-            })
-        }catch {
-            print("catch : \(error)")
-        }
-       
-        
+        let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh-CN"))
+        let request = SFSpeechURLRecognitionRequest(url: soundURL)
+        recognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
+            if let _ = error {
+                print("\(error!)")
+                return
+            }
+            
+            self.resultLabel.text = result?.bestTranscription.formattedString
+        })
+  
     }
-
+    
 }
 
