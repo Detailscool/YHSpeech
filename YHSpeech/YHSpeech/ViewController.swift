@@ -43,13 +43,16 @@ class ViewController: UIViewController {
         settings[AVFormatIDKey] = NSNumber(value:kAudioFormatMPEG4AAC)
         settings[AVSampleRateKey] = NSNumber(value:8000)
         settings[AVNumberOfChannelsKey] = NSNumber(value:1)
+        settings[AVLinearPCMBitDepthKey] = NSNumber(value: 16)
+        settings[AVEncoderAudioQualityKey] = NSNumber(value: AVAudioQuality.high.rawValue)
         
-        let url = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last
+        let url = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask) .last
         if let _ = url {
             soundURL = url!.appendingPathComponent("abc.aac")
             let audioFormat = AVAudioFormat(settings: settings)
             do {
                 recorder = try AVAudioRecorder(url: soundURL, format: audioFormat)
+                recorder?.delegate = self
             }catch {
                 print("\(error)")
                 return
@@ -58,6 +61,7 @@ class ViewController: UIViewController {
             return
         }
         
+        print("Begin Record")
         recorder?.prepareToRecord()
     }
     
@@ -82,7 +86,6 @@ class ViewController: UIViewController {
     
     @IBAction func stopRecording() {
         recorder?.stop()
-        print("exit : \(FileManager.default.fileExists(atPath: soundURL.absoluteString))")
     }
     
     @IBAction func speechRecognized() {
@@ -106,6 +109,8 @@ class ViewController: UIViewController {
             return
         }
         
+        var string : String = String()
+        
         let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh-CN"))
         let request = SFSpeechURLRecognitionRequest(url: soundURL)
         recognizer?.recognitionTask(with: request, resultHandler: { (result, error) in
@@ -114,10 +119,22 @@ class ViewController: UIViewController {
                 return
             }
             
-            self.resultLabel.text = result?.bestTranscription.formattedString
+            string += (result?.bestTranscription.formattedString)!
+            self.resultLabel.text = string
         })
   
     }
     
+}
+
+extension ViewController : AVAudioRecorderDelegate{
+    func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
+        print("audioRecorderDidFinishRecording : \(flag)")
+        print("exit : \(FileManager.default.fileExists(atPath: soundURL.absoluteString))")
+    }
+    
+    func audioRecorderEncodeErrorDidOccur(_ recorder: AVAudioRecorder, error: Error?) {
+        print("audioRecorderDidFinishRecording : \(error)")
+    }
 }
 
