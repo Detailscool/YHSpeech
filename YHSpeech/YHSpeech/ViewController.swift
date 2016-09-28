@@ -46,7 +46,7 @@ class ViewController: UIViewController {
         settings[AVLinearPCMBitDepthKey] = NSNumber(value: 16)
         settings[AVEncoderAudioQualityKey] = NSNumber(value: AVAudioQuality.high.rawValue)
         
-        let url = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask) .last
+        let url = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last
         if let _ = url {
             soundURL = url!.appendingPathComponent("abc.aac")
             let audioFormat = AVAudioFormat(settings: settings)
@@ -109,7 +109,7 @@ class ViewController: UIViewController {
             return
         }
         
-        var string : String = String()
+        var resultString : String = String()
         
         let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "zh-CN"))
         let request = SFSpeechURLRecognitionRequest(url: soundURL)
@@ -119,8 +119,12 @@ class ViewController: UIViewController {
                 return
             }
             
-            string += (result?.bestTranscription.formattedString)!
-            self.resultLabel.text = string
+            print("\(Thread.current)")
+            
+            if let result = result {
+                resultString += result.bestTranscription.formattedString
+                self.resultLabel.text = resultString
+            }
         })
   
     }
