@@ -12,16 +12,14 @@ import Speech
 
 class ViewController: UIViewController {
     
-    var recorder : AVAudioRecorder?
+    private var recorder : AVAudioRecorder?
     var soundURL : URL!
-    var session : AVAudioSession!
+    private lazy var session : AVAudioSession = AVAudioSession.sharedInstance()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         print("\(NSHomeDirectory())")
-
-        session = AVAudioSession.sharedInstance()
         
         do {
             try session.setCategory(AVAudioSessionCategoryPlayAndRecord, with: AVAudioSessionCategoryOptions.defaultToSpeaker)
@@ -126,9 +124,7 @@ class ViewController: UIViewController {
                 self.resultLabel.text = resultString
             }
         })
-  
     }
-    
 }
 
 extension ViewController : AVAudioRecorderDelegate{
